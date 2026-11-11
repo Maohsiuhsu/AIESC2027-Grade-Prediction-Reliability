@@ -1,0 +1,111 @@
+{
+  "title": "Exploratory study: new tabular models, hierarchical target encoding, alternative objectives (IR.csv 113-2)",
+  "registered_on": "2026-09-24",
+  "status_of_results": "EXPLORATORY ONLY. IR.csv has already been used repeatedly for model selection; no result here is confirmatory and none supports next-year or cross-college claims. The existing metadata NO-GO decision is not revisited.",
+  "data": {
+    "frame": "research primary frame: term 113-2, ambiguous zero grades excluded (83,494 rows); zero-grade sensitivity uses the 85,567-row frame",
+    "features_registration_time": [
+      "course_key",
+      "required_elective",
+      "course_category",
+      "credits",
+      "section_size",
+      "section_n_student_colleges",
+      "student_college",
+      "student_dept",
+      "division",
+      "program"
+    ],
+    "derived_registration_time": [
+      "course_family (from the normalised course name; no grades)"
+    ],
+    "forbidden": [
+      "student_id or any per-student grade proxy",
+      "same-term grades (term, midterm, daily, final)",
+      "target-derived columns",
+      "course_college / course_dept (invalid labels)",
+      "instructor",
+      "undated syllabus content",
+      "export-scope artefacts (course_code, offering_class, hours, student_class, grade_level)"
+    ]
+  },
+  "protocols": {
+    "splits": [
+      "student",
+      "section",
+      "course",
+      "family"
+    ],
+    "folds": "5-fold GroupKFold, seed 42, identical to research/validation.py (student/section/course) and research/family (family)",
+    "populations": [
+      "all rows of each split",
+      "family split: rows of single-course families (genuinely unseen courses)"
+    ],
+    "inner_folds": "every preprocessing step, encoder, early-stopping split and tuning step uses only the outer training fold, grouped by the same unit as the outer split"
+  },
+  "frozen_baselines": {
+    "catboost:cat": "research defaults, course+student categorical features",
+    "lightgbm:cat": "research defaults, course+student categorical features",
+    "reuse": "out-of-fold predictions from research/advanced phase 1 are reused only if CatBoost on the student split is recomputed bit-for-bit",
+    "comparator": "per protocol, the frozen baseline with the lower MAE (the strongest comparator)"
+  },
+  "candidates": {
+    "A1_tabm": "official `tabm` 0.0.3 TabM.make(k=32, default backbone); in-fold QuantileTransformer for numerics, integer codes for categoricals (levels with < 5 training rows and unseen levels -> UNK); AdamW lr 2e-3, wd 3e-4, batch 512, max 30 epochs, early stopping patience 5 on a 10% grouped inner validation split; target standardised; mean over the k heads",
+    "A2_ft_transformer": "official `rtdl_revisiting_models` 0.0.2 FTTransformer with get_default_kwargs(n_blocks=2) and make_default_optimizer(); same preprocessing and early stopping as A1",
+    "B1_hte_lightgbm": "LightGBM; course_key replaced by group-aware hierarchical target encodings (category -> family -> course, smoothing m selected in-fold from {5, 20, 100} by 3-fold inner grouped CV) + training-row counts",
+    "B2_hte_catboost": "CatBoost with the B1 encodings (same in-fold m)",
+    "B3_hte_plus_cat_lightgbm": "LightGBM with course_key categorical AND the B1 encodings",
+    "B4_missing_lightgbm": "frozen LightGBM + indicators available at prediction time: required_elective missing, course seen in training, family seen in training (training-row indicators computed out-of-fold like the encodings)",
+    "B5_missing_catboost": "frozen CatBoost + the B4 indicators",
+    "C1_ebm": "InterpretML ExplainableBoostingRegressor (interpret-core 0.7.8), defaults except outer_bags=4, random_state=42; categoricals as strings",
+    "C2_ngboost": "NGBoost 0.5.11, Normal distribution, DecisionTreeRegressor(max_depth=4), 400 estimators, lr 0.05, early stopping 20 rounds on a 10% grouped inner validation split; inputs = B1 encodings (m=20) + ordinal codes of low-cardinality categoricals + numerics; point prediction = mean",
+    "C3_catboost_mae": "frozen CatBoost features, loss_function=MAE",
+    "C4_catboost_huber": "frozen CatBoost features, loss_function=Huber:delta=10",
+    "C5_lightgbm_l1": "frozen LightGBM features, objective=l1",
+    "C6_lightgbm_huber": "frozen LightGBM features, objective=huber, alpha=10"
+  },
+  "endpoints": {
+    "primary": "paired MAE difference MAE(best frozen baseline) - MAE(candidate) per protocol (4) and on single-course families (family split), group-level bootstrap by the split's grouping unit",
+    "secondary": [
+      "RMSE",
+      "MAE per course_category / student_college / program and the worst group",
+      "wall-clock seconds per fit and in total",
+      "zero-grade sensitivity"
+    ],
+    "bootstrap": {
+      "n_boot": 5000,
+      "ci_95": true,
+      "multiplicity": "Bonferroni over 13 candidates x 5 comparisons = 65: adjusted two-sided level 1 - 0.05/65"
+    }
+  },
+  "zero_grade_sensitivity": "frozen baselines, C3-C6, and the best A and best B candidate (by mean primary difference) on the zero-inclusive frame, student and family splits; MAE on zero and non-zero rows",
+  "decision_rule": {
+    "exploratory_signal": "Bonferroni-adjusted CI lower bound > 0 and gain >= 0.05 on >= 2 of the 4 protocols, AND 95% CI upper bound >= 0 (not significantly worse) on every protocol and on single-course families",
+    "interpretation": "a signal only nominates a candidate for confirmation on future, independent semesters; it is never reported as validated performance"
+  },
+  "budget_and_stopping": {
+    "compute": "CPU only (the GPUs are occupied by other users' jobs); 32 threads",
+    "total_wall_clock_cap_hours": 10,
+    "per_fit_cap_minutes": 20,
+    "neural_epoch_cap": 30,
+    "on_cap": "a fit that exceeds its cap is stopped and recorded as budget_exceeded; its candidate is reported as incomplete, never re-run with a bigger budget",
+    "no_second_round": "no post-hoc tuning, new candidates or re-runs after results are seen; failures are recorded, not retried beyond one automatic retry for transient errors",
+    "stop_after": "all 13 candidates evaluated once on the 4 protocols, or the total cap reached",
+    "execution_order": [
+      "C3_catboost_mae",
+      "C4_catboost_huber",
+      "C5_lightgbm_l1",
+      "C6_lightgbm_huber",
+      "B4_missing_lightgbm",
+      "B5_missing_catboost",
+      "B1_hte_lightgbm",
+      "B2_hte_catboost",
+      "B3_hte_plus_cat_lightgbm",
+      "C1_ebm",
+      "C2_ngboost",
+      "A1_tabm",
+      "A2_ft_transformer"
+    ],
+    "non_interruptible_fits": "GBM / EBM / NGBoost fits cannot be interrupted safely; a fit whose wall-clock exceeds the per-fit cap is recorded as budget_exceeded and its candidate is excluded from the decision"
+  }
+}

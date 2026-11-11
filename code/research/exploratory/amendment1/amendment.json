@@ -1,0 +1,42 @@
+{
+  "title": "Amendment 1 to the exploratory study: TabM, FT-Transformer and NGBoost",
+  "registered_on": "2026-09-25",
+  "relation_to_original": "Separate amendment. The original pre-registration (research/exploratory/prereg.json, SHA-256 ef350be33540e9a1...) is NOT modified. These three candidates were skipped in the original run because the original runner did not abort EBM after its first over-cap split (a documented protocol deviation). Results of this amendment are NOT part of the original pre-registered evaluation.",
+  "status_of_results": "EXPLORATORY ONLY. IR.csv has been used repeatedly for model selection; no finding is independent confirmation, next-year prediction or validated cross-college performance. The metadata NO-GO decision is not revisited.",
+  "data": "identical to the original pre-registration: 113-2 primary frame (83,494 rows, ambiguous zeros excluded) for evaluation; zero-inclusive frame (85,567 rows) for zero-grade sensitivity; registration-time features only (course_key, required_elective, course_category, credits, section_size, section_n_student_colleges, student_college, student_dept, division, program); no student ids, same-term grades, invalid college labels or undated syllabus content",
+  "folds": "5-fold GroupKFold, seed 42, identical to the original study (research.advanced.common.get_folds)",
+  "seeds": {"folds": 42, "models": 42},
+  "models": {
+    "M1_tabm": "official `tabm` 0.0.3: TabM.make(k=32, default backbone); AdamW lr 2e-3 wd 3e-4; batch 512; max 30 epochs; early stopping patience 5 on a 10% grouped inner validation split; in-fold QuantileTransformer / median imputation for numerics; categorical codes with levels < 5 training rows and unseen levels -> UNK; standardised target; prediction = mean over the k heads",
+    "M2_ft_transformer": "`rtdl_revisiting_models` 0.0.2 (the maintained implementation by the FT-Transformer authors): FTTransformer(**get_default_kwargs(n_blocks=2)), make_default_optimizer(); same preprocessing, batch, epochs and early stopping as M1",
+    "M3_ngboost": "NGBoost 0.5.11, Normal, DecisionTreeRegressor(max_depth=4), 400 estimators, lr 0.05, early stopping 20 rounds on a 10% grouped inner validation split; inputs = group-aware hierarchical target encodings (m = 20) + ordinal codes + numerics, all fitted in the training fold. Uncertainty: raw predictive Normal and a variance-rescaled Normal whose scale multiplier is estimated on the same inner validation split (training fold only)"
+  },
+  "internal_time_caps": "disabled inside the models; the ONLY limit is the subprocess timeout",
+  "baselines": "frozen CatBoost and LightGBM (categorical course+student features) out-of-fold predictions from the original study, reused after a bit-for-bit recompute of CatBoost on the student split; for the zero-grade frame they are recomputed on the same folds",
+  "comparator": "per evaluation unit, the frozen baseline with the lower MAE",
+  "evaluation_units_in_priority_order": [
+    "T1 family split (5 folds): all rows and single-course families (unseen course families)",
+    "T2 zero-grade sensitivity: family split on the zero-inclusive frame (5 folds)",
+    "T3 student split (5 folds)",
+    "T4 section split (5 folds)",
+    "T5 course split (5 folds)"
+  ],
+  "unit_completion_rule": "a unit counts only if all 5 of its folds finished; partial units are reported as incomplete and excluded from comparisons",
+  "budget": {
+    "compute": "CPU only, 32 threads, one fit at a time",
+    "global_wall_clock_hours": 4,
+    "per_model_share_minutes": 80,
+    "per_fit_limit_minutes": 20,
+    "enforcement": "each fit runs in its own subprocess (own process group) and is killed with SIGKILL when its timeout expires; timeout = min(per-fit limit, model share remaining, global budget remaining)",
+    "baselines_and_analysis": "baseline recomputation and analysis run outside the model shares but inside the global budget",
+    "execution_order": ["feasibility: M1 T1-fold0, M2 T1-fold0, M3 T1-fold0", "then per model in order M1, M2, M3: remaining units in priority order until the model share or the global budget is exhausted"]
+  },
+  "feasibility_rule": "each model first runs fold 0 of T1. If that fit is killed at the per-fit limit or fails, the model is INCOMPLETE and nothing else is run for it. The feasibility fold's predictions are reused in T1 (same fold, same seed). Limits are never relaxed.",
+  "on_timeout_or_failure": "a killed or failed fit ends that model's evaluation (remaining units not started, recorded as incomplete); one automatic retry only for a failure that is not a timeout",
+  "endpoints": {
+    "point": "MAE, RMSE; paired MAE difference vs the comparator with group-level bootstrap (5,000 resamples) 95% CI and a Bonferroni-adjusted CI over 3 models x 5 comparisons (alpha = 0.05 / 15)",
+    "uncertainty_ngboost": "negative log-likelihood (Normal), empirical coverage and mean width of central intervals at 50/80/90/95%, raw and rescaled; mean absolute coverage error",
+    "costs": "wall-clock and child-process CPU seconds per fit, epochs, status (complete / timeout / failed / not_started)"
+  },
+  "interpretation": "any difference is exploratory; no decision rule nominates candidates beyond reporting, and no second round follows this amendment"
+}

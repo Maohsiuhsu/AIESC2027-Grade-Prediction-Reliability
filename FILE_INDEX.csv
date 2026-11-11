@@ -1,0 +1,72 @@
+path,bytes,sha256,role,paper_result
+research/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無直接表格；讓 research 可被匯入
+research/config.py,5966,dd3b984265a452b0c6ceef7c6218fcea7ee4ff9c40b39e2393aba810529fafc8,特徵、排除欄位、五折種子、凍結 LightGBM／CatBoost 超參數,所有實驗的共同設定；n_folds=5、seed=42
+research/data.py,4615,41cf95f252e853324c74d062220b02af7c28d5932c7b1e03b4bb7dbec7ba52d1,由清理後資料表重建 113-2 分析表（執行時才讀資料，程式內無逐筆個資）,主分析與重新擬合的列順序
+research/models.py,5046,0600e32d7ac9b34cc37f5783893e9e6fcfb57f482a0a5588ac6e2506a48eaf6d,LightGBMFrame 與 CatBoost 凍結學習器,Table 2–3、Figure 2–3 的 LightGBM／CatBoost 定義
+research/validation.py,14030,88565d3d5264d0cae7dbb1851fd1f443802eb82ae21aea7f518f8693e9a1dfee,學生群組五折 GroupKFold（folds3）,論文未見學生五折的定義
+research/experiments.py,4924,4ba5aac62ac647880ebfc31651e1999bb1fd4c86a356eba61a1fccfdd04ddf4b,較早的群組交叉驗證與 MAE／RMSE；validation.py 會匯入,折的輔助定義，不是論文表格產生程式
+research/advanced/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無
+research/advanced/common.py,5632,1deecf23b9892cf9a8449744877052035d2d9552a66188f45ca94b840401c24c,get_folds：與 validation.folds3 相同的五折,FT-Transformer、NGBoost 與後續重新擬合沿用的折
+research/advanced/names.py,1584,38083f4f72b390ce12c1783475c6d26cb84237542452643d998e8a518e57d669,課程名稱正規化（不含成績或學號）,課程家族背景分組的字串處理
+research/advanced/phase1.py,3990,b4e434f7074a11ec6d43943e4574af14d509d181da66d9e1d6519787138bc0a4,凍結 CatBoost／LightGBM 的折外預測,Table 2 的凍結 LightGBM、CatBoost 預測來源
+research/advanced/course_repr.py,5696,fc7b5881e3122621d48dc2213913a5d71df5641a81919771f922a870d052de5d,Phase 1 的表徵模型；cat 特徵集即凍結基準,凍結 LightGBM、CatBoost 的包裝
+research/advanced/embed_courses.py,2666,ec01ec8905999e943f9c6341c694d58b93e44b21f6aa4aa0a192e1d1335c1bf2,課程名稱嵌入快取程式（執行時才讀課程名稱，不含學生成績）,凍結 cat 基準不使用嵌入；僅為 course_repr 的匯入相依
+research/advanced/ensemble.py,5311,2b22b068555f47b430acfbb8ddd63457b2c4e9df261025f05e5a674a1bf8965d,先前 IR 研究的集成與調參,不對應 AIESC 論文表格；family/nested.py 的匯入相依
+research/exploratory/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無
+research/exploratory/candidates.py,9584,b8ef3ff9b2b03888ee612891062742b2b7cf9f8b457871512f4883d105fbb129,LightGBM-L1（C5）與 NGBoost Normal（NGB）,Table 2–3 的 LightGBM-L1；NGBoost 點預測定義
+research/exploratory/encoders.py,3809,a7378a7d421dc4d9dc66e069fbbe5670931d159f2cbf7590c878cf123fbc6041,群組感知階層目標編碼,NGBoost 的折內特徵
+research/exploratory/nn.py,6466,da0ad4cfcb2fbfae05c06381ec45743399823c5558feefc1232e53557a6c4a33,官方 FT-Transformer（與 TabM）,Table 2–3、Figure 2–3 的 FT-Transformer
+research/exploratory/run.py,15411,52c398f33534e5082d4feb40263376c12eb5d4381a072a349840426d6239f5d0,探索實驗主程式，寫入凍結基準與 LightGBM-L1 的折外預測,4.1–4.4 所讀的 LightGBM、CatBoost、LightGBM-L1 預測
+research/exploratory/prereg.json,6751,ef350be33540e9a1590a7933eb5be99903c7f1d856945b4c47badd8dcc4a9b04,探索實驗事前登錄（無個資）,C5 LightGBM-L1 等候選的設計
+research/exploratory/amendment1/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無
+research/exploratory/amendment1/worker.py,3713,99890351130f2ba009002ac2d22f27c799a6b7a739d936ca96482d60d9397bbe,單折擬合：FT-Transformer 與 NGBoost（含尺度倍率）,4.1–4.4 的 FT-Transformer 與 NGBoost；4.4 區間的 loc／scale
+research/exploratory/amendment1/run.py,14178,cb989a3d52c1bdde1322faa36857d6dd8262299295a16d506acf7aa0e690bdbf,修正案一排程；T3 為學生五折,上述模型的學生分割（T3）執行入口
+research/exploratory/amendment1/amendment.json,5291,448905be70e9be4950e29347dcc313c11ea8c2912d42ff479d9aebc86f4652c1,修正案一事前設計（無個資）,M2 FT-Transformer、M3 NGBoost、T3 學生分割
+research/family/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無
+research/family/groups.py,5245,8f1bd1b662717d00bfa992370d6273c872dd8809b51cb78207ca88d71b49c3e0,課程家族分組；探索實驗主程式會匯入,不產生學生分割表格；4.4 背景所用的家族分組
+research/family/intervals.py,4071,31abe29b9dcf2ff34a860870aa193b4836a7cb6938c3131cc3988914da5b161a,家族分割上的 split／Mondrian／CQR 區間,4.4 背景；學生分割的區間結果不由此檔產生
+research/family/nested.py,4372,17a565093dfc9d7a3da72d690a14dd3c358768974649c71bbbd6bf12bdf75862,家族分割的內層切分,intervals.py 的匯入相依，不是論文學生分割表格
+research/final/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,套件標記,無
+research/final/consolidate.py,17118,087efc0be584c848493fbc420f240f4fe3d856ebbe6f690bdb7c5f9b8afc0304,彙整已保存預測，寫出登錄的 MAE／RMSE 與 NGBoost 區間,供主分析交叉核對，不產生論文表格
+src/ir_pipeline/__init__.py,94,e8e5d51cb2d9778d19b69349413b4acf7f2d9dfd46a8cf6424cab431e67fd338,套件標記,無
+src/ir_pipeline/model.py,3704,60fe6a4fd370ebfb220d2a35a51a9842d0e8d3b1ec600214f742ff49820ab91e,CatBoost 欄位前處理,凍結 CatBoost 的前處理
+research/aiesc2027/__init__.py,286,dce0f1799161ed945355eaff71e0351b8edbcd570bfc5cc9cbff67934d6d5a85,套件標記,無
+research/aiesc2027/config.py,5172,b1bc27e967d3d8b1fa407f90a79c09221a8a09d5c71f71e76091de247860359a,路徑、模型對照、低分門檻、成績區間、Bootstrap,全部論文表格的固定定義
+research/aiesc2027/io_data.py,13037,3baa2072cb12385d47a4f804c0604e2646913b18ab2224a39163d00e244d7573,讀取已保存折外預測、對齊五折、防洩漏檢查,Table 1、Table S1；4.1–4.4 的輸入
+research/aiesc2027/metrics.py,7219,550e471e9807ec30cc3731dba79b7d0c79bee727cd8d2f3b6df8e6f00a217c9e,迴歸、低分辨識、PR／ROC、Brier、ECE、區間偏差,Table 2、Table 3、Table 6
+research/aiesc2027/bootstrap.py,5853,c2f395e694cf8347283b19b9bdb0b944b843cfc869f6fc03bedac14eaa2f989b,學生群組成對 Bootstrap 與 Holm 校正,Table 2–3 與 Table S2 的信賴區間
+research/aiesc2027/uncertainty.py,4861,236148c1a3a4048c2f8815b0252f871fd69687d7e8bbfcb5d9222c59546cf58f,NGBoost NLL、CRPS、Normal 區間、跨折 conformal、PIT,Table 7、Figure 6、Figure S1–S2（4.4）
+research/aiesc2027/analysis.py,12272,54a27741a795b98c8ee281b012482b87fa7261d73befba7c0cd58fcc021eba11,組裝主分析各表,Table 1–3、Table 6–7 與補充表 S1–S2
+research/aiesc2027/tables.py,12601,79e6ada0a6d5898f8419f1b435096151fbc4d6a3c61bf3efe74fa567da9abb32,輸出 CSV、Markdown、LaTeX 表,主分析表格檔
+research/aiesc2027/figures.py,13220,0d92f2cc30af69a2cc4194466fcd00ea368792dedafa4965ee74fd4e667492a6,Figure 1–3、5–6 與 S1–S2（程式內原編號）,Figure 1–3、Figure 5–6、Figure S1–S2
+research/aiesc2027/report_text.py,20091,b20889dec3c5a737e11817a0fa0b06f1aca6930c6005ad7d84cc14c581687bb7,4.1–4.5 英文結果草稿,Results 4.1、4.2、4.3、4.4、4.5
+research/aiesc2027/run_all.py,12031,3a9073a6ced6a4bcf0ef245b7d58c50cdd0251aac587675ac04a019d3bcc326e,主分析入口：只讀已保存預測，不訓練模型,Table 1–3、6–7；Figure 1–3、5–6、S1–S2
+research/aiesc2027/inventory.py,4479,b450767b1744028ff491d6883a429fd81937f6bcd16a725e4e3cc7bce6941fba,盤點上游檔案,方法追溯，不是結果表
+research/aiesc2027/integrity.py,1516,f5b5019c85ba17c56ffb78c4e6298ec981c1e0cf43b29660b93b6a2af0113b74,受保護檔案雜湊比對,執行稽核，不是結果表
+research/aiesc2027/calibration_split_spec.json,5764,74652ab8548df0f912c5bc14adcb134db1c907f8b37af8827ec16e4b8e86b7dc,折內校準實驗的事先設計,4.4.1 的設計檔
+research/aiesc2027/calibration_fit.py,8049,14968fd5f6a9f2af89681090cf7129c8c37f4627788f7adf06adfdadf4069952,每折重擬合 NGBoost、LightGBM-L2 與分位數 LightGBM,Table 8–9、Figure 7 的模型擬合
+research/aiesc2027/calibration_analysis.py,15581,2d864701061323340891bdbeb7004c057db88c4f231a96674b17e5d121fa7c2d,split、Mondrian、CQR 與機率再校準,Table 8–9、Figure 7、Table S7–S13
+research/aiesc2027/calibration_text.py,9823,55e4b9f7701816a484f24ef39fff1de6e5aea49ebdbcbced2dcd4a4e5635f1e7,4.4.1 英文草稿,Results 4.4.1
+research/aiesc2027/run_calibration.py,18221,c3516863cc6f5594e417a2622a2edb40d39569b325497b608f28671e41053b95,校準分割分析入口,Table 8–9、Figure 7
+research/aiesc2027/risk_methods_spec.json,5038,32ddf68d5c9030b2567b7c4e1f7d323ec2fb18ba6d41b8c44d377b5397464029,低分決策規則實驗的事先設計,4.2.1、4.2.2 的設計檔
+research/aiesc2027/risk_fit.py,7714,5e005cd38e7b98faafb249a1880081f14e328894997819ca9dd0968ab1116554,L1、分類器、加權迴歸與含 0 分重擬合,Table 4–5、Figure 4 的模型擬合
+research/aiesc2027/risk_analysis.py,11290,ea2515e99c5fa92ca845776102b49347aa043f8acd47eddc0a8713dfef15295c,操作點 OP1／OP2 與 Holm 比較,Table 4–5、Table S3–S6
+research/aiesc2027/risk_text.py,9482,b6829ae74861b60b80be6b9430520fa086d53c946f6a091b2b39d9152ee326de,4.2.1、4.2.2 英文草稿,Results 4.2.1、4.2.2
+research/aiesc2027/run_risk.py,20373,b18a0fac5f9ebd551b599ddab3db42eed897e5b51f4d39efec9ce74ae7a5c599,低分辨識後續實驗入口,Table 4–5、Figure 4
+research/aiesc2027/paper_package.py,17118,64b1b2cb5b9b4b849afb966e2769e0b057da65f4e571db6b97b0289c5a76dbbc,整合三份草稿並依論文編號重排圖表,完整 Results 章節與 Table 1–9、Figure 1–7
+research/aiesc2027/handoff_values.py,19871,c35d7b4c7d26c7d45a2e2f3045f4332850d20df6509276ca01829e97eb2fa0d7,由已保存彙總表填寫交付文件數值,不產生論文表格
+research/aiesc2027/handoff_checks.py,14988,39a5bb34bf7a29500d5e040b401a6b37dbde7f88c3bb56aaa5f6d5a763a007ea,獨立重算關鍵數值與分割檢查,結果稽核，不是新實驗
+research/aiesc2027/handoff_package.py,68165,b12855e8be5601a8d786b21a60a7fa5dd4429d587fd3147c9cc938ff95da6e09,打包既有彙總成果（本副本未含其輸出）,不產生論文表格
+research/aiesc2027/decision_reliability_spec.json,3666,49841c00afbc1a05b10f037409cfd179c235fd463b1d084f9d3d3a9202362f17,審查預算與風險分層的事先設計,論文編號之外的補充分析
+research/aiesc2027/decision_reliability.py,19690,fa3501f0fbf85551015edc27d6c522597c2029dce2e7e306f2b41c50e1ef1731,固定預算與風險分層的覆蓋與召回,補充分析，不在 Table 1–9
+research/aiesc2027/decision_figures.py,18879,94d5d8cd82a4dec195cee942dd3b0ec05b3cf51021efe43496126abbef05d557,Figure 1–2 著色與預算／分層圖,補充圖，不取代 Figure 3–7
+research/aiesc2027/run_decision_reliability.py,17221,4e41ffd87e22a5332acdbf7c9b20f06c16c7c9975b17a419354ae4742dc1f407,決策可靠性分析入口,補充分析
+research/aiesc2027/decision_package.py,61711,7808a8ef16fb1247645b01876c5519f232d270c0021740d0c91174efb7ad87a0,補充分析的文件與追溯,補充分析打包，不含個資表
+research/aiesc2027/README.md,25995,cd92dfa4c3e75febf51b4c85d50a92c03b2601988938447ab158c0be100582bf,模組與論文編號說明,文件
+research/aiesc2027/tests/__init__.py,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,測試套件標記,合成資料測試
+research/aiesc2027/tests/test_aiesc2027.py,7077,0e0490519ce2af51ecd6b3fcbf4b88ad0769375df7d003fec542a605bb9549ce,指標、Bootstrap、conformal 不使用測試標籤,主分析正確性
+research/aiesc2027/tests/test_calibration_split.py,2314,abe7c60e8fd96e065a2db204b0af800a3894351e09a45adba0564375d328e842,conformal、Mondrian、CQR、學生層級分割,4.4.1 正確性
+research/aiesc2027/tests/test_risk_methods.py,2358,a69d0edeee812e9bb3b3134d251d4d38b9e2ff51256ce44bc01c0016ad0a0dc7,OP1／OP2、類別權重、0 分學生分派,4.2.1–4.2.2 正確性
+research/aiesc2027/tests/test_paper_package.py,1155,868c3dd97d3b57d0e5ca925fd950fc28fa42499ba2bdffaa111f322a757faa31,圖表編號對照,Results 組裝正確性
+research/aiesc2027/tests/test_handoff_package.py,2831,62d62187c03f598903f5f710bd14c59e9c2e60b92ad93257709cb3c7f29e9390,交付文件填值,交付程式正確性
+research/aiesc2027/tests/test_decision_reliability.py,4877,6b35701b7859641ad09f119891a43c02d3d01df32b5550f5df38987fc7cbae69,預算與分層的合成資料測試,補充分析正確性

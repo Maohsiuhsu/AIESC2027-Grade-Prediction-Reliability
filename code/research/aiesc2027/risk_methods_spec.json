@@ -1,0 +1,45 @@
+{
+  "title": "AIESC 2027 follow-up 2: risk-oriented decision rules and training objectives, and a zero-grade sensitivity analysis (student split)",
+  "status": "exploratory; specified before any model of this follow-up was fitted and before any of its results were seen",
+  "written": "2026-11-09",
+  "question": "Is the poor identification of grades below 60 (main analysis, Section 4.2) mainly a consequence of the fixed decision rule 'predicted grade < 60' and of training for average error, or a limit of the registration-time information? Answered by comparing risk-oriented thresholds and objectives that use the same features, folds and hyperparameters.",
+  "population_A": "83,494 enrolments (zeros excluded; the main analysis population)",
+  "population_B": "85,567 enrolments (2,073 unexplained zero grades included; sensitivity analysis)",
+  "folds": {
+    "A": "saved student-split test indices (as in all AIESC analyses) and the fit / calibration partition of the calibration-split follow-up (20% of each training fold's students; calibration_fit.calibration_partition)",
+    "B": "the same: every student keeps the test fold and the fit / calibration role of population A; the 50 students who have only zero grades (absent from population A) are assigned with numpy default_rng(42): test fold = integers(0, 5), calibration role = random() < 0.2. Zero-grade rows of the other students follow their student."
+  },
+  "features_and_hyperparameters": "frozen LightGBM features (COURSE_CATEGORICAL + STUDENT_CATEGORICAL + COURSE_NUMERIC) and frozen LightGBM hyperparameters for every LightGBM variant; NGBoost as in Amendment 1. No tuning. All models fitted on the proper-training (80%) part of each training fold.",
+  "methods": {
+    "lgb_fixed": "LightGBM-L2 regression, rule: predicted grade < 60 (reference: the rule of the main analysis)",
+    "lgb_tuned": "LightGBM-L2 regression, risk score = -prediction, threshold chosen on the calibration set",
+    "l1_fixed": "LightGBM-L1 regression, rule: predicted grade < 60",
+    "l1_tuned": "LightGBM-L1 regression, threshold chosen on the calibration set",
+    "classifier": "LightGBM binary classifier for 1[grade < 60] (objective='binary'), risk score = predicted probability; probability recalibrated by isotonic regression on the calibration set for probability metrics",
+    "quantile_q25": "LightGBM quantile regression, alpha = 0.25 (fitted in follow-up 1 for population A), risk score = -q25",
+    "weighted": "LightGBM-L2 regression with class-balanced sample weights: rows with grade < 60 weighted (1 - p) / p, p = their share in the proper-training part; risk score = -prediction",
+    "ngboost_prob": "NGBoost P(Y < 60) = Phi((60 - mu) / sigma), risk score = raw probability; isotonic recalibration on the calibration set for probability metrics"
+  },
+  "operating_points": {
+    "native": "the method's own natural rule: predicted grade < 60 for regressions and quantile; recalibrated probability >= 0.5 for classifier and ngboost_prob",
+    "OP1_budget": "threshold such that the share flagged in the CALIBRATION set equals the calibration prevalence of grade < 60 (flag budget = expected number of low grades)",
+    "OP2_recall50": "largest threshold whose CALIBRATION recall is >= 0.50"
+  },
+  "test_metrics": "pooled out-of-fold over the 5 test folds: PR-AUC, ROC-AUC (threshold-free); at each operating point precision, recall, F1, specificity, balanced accuracy, flag rate; MAE / RMSE for the regression methods; Brier, Brier skill score and ECE for the probability methods",
+  "primary_comparison": {
+    "reference": "lgb_tuned",
+    "contrasts": ["l1_tuned", "classifier", "quantile_q25", "weighted", "ngboost_prob"],
+    "metrics": ["pr_auc", "roc_auc", "f1_OP1", "precision_OP2"],
+    "multiplicity": "Holm over the 20 contrasts (5 methods x 4 metrics), alpha 0.05; Bonferroni 95% CIs also reported",
+    "practical_threshold": 0.05
+  },
+  "threshold_comparison": {
+    "contrasts": ["lgb OP1 vs lgb_fixed", "lgb OP2 vs lgb_fixed", "l1 OP1 vs l1_fixed", "l1 OP2 vs l1_fixed"],
+    "metrics": ["recall", "f1"],
+    "multiplicity": "Holm over these 8 contrasts (separate family)"
+  },
+  "statistics": "paired student-cluster bootstrap (multinomial weights), 5000 replicates, seed 42, percentile 95% CIs and two-sided bootstrap p-values",
+  "population_B_outputs": "the same methods and metrics on all 85,567 rows; share of the 2,073 zero-grade rows flagged at OP1 and OP2; metrics on the 83,494 non-zero rows compared descriptively with population A (effect of training with zeros). Per-method 95% CIs; no additional hypothesis family.",
+  "interpretation_rules": "A method 'improves risk identification' only if its contrast with lgb_tuned is supported after Holm correction AND exceeds the practical threshold. Negative and null results are reported in full.",
+  "not_included": "FT-Transformer and CatBoost are not refitted (cost on this shared host; LightGBM variants represent the gradient-boosting family). No cross-semester validation (no data)."
+}

@@ -1,0 +1,44 @@
+{
+  "title": "AIESC 2027 follow-up: in-fold calibration split for conformal / CQR intervals and probability recalibration (student split)",
+  "status": "exploratory; specified before any model in this follow-up was fitted",
+  "written": "2026-11-09",
+  "motivation": "The main AIESC analysis could only apply post-hoc cross-fold conformal to the saved NGBoost predictions because no student-split model had an untouched calibration set. This follow-up refits models on a fit / calibration partition of every outer training fold so that split conformal, Mondrian conformal and CQR are evaluated with a calibration set that neither trained the model nor selected its early-stopping iteration.",
+  "outer_folds": "The saved T3 (student split) test indices of Amendment 1 (outputs/research/exploratory_amendment1/jobs/M3_ngboost__T3__f{k}.npz); training fold = all remaining rows. Deviation recorded before any model was fitted: recomputing the partition with research.advanced.common.get_folds under the pinned versions does NOT reproduce it (GroupKFold orders equal-sized groups with numpy's unstable argsort, whose tie order depends on the CPU SIMD kernel; this host has AVX2 but no AVX-512). The saved partition is therefore authoritative; the recomputation is only reported.",
+  "environment": "Separate virtual environment pinned to the IR manifest: python 3.13, numpy 2.3.5, pandas 2.3.3, scikit-learn 1.7.2, ngboost 0.5.11, lightgbm 4.7.0, catboost 1.2.10 (catboost is imported by research.models only).",
+  "reproduction_gate": "Before any new result is used, the original NGBoost (Amendment 1 NGBU) and the frozen LightGBM are refitted on every full outer training fold and compared with the saved OOF predictions. Reported, not tuned. Exact equality is expected only for LightGBM (no grouped inner folds); NGBoost's hierarchical target encoder uses inner GroupKFold, which is subject to the same CPU-dependent tie order, so NGBoost is expected to reproduce approximately (test-fold MAE, NLL and 90% coverage compared).",
+  "calibration_split": {
+    "unit": "student",
+    "fraction": 0.2,
+    "rule": "within outer training fold k: sorted unique student pseudonyms permuted with numpy default_rng(42 + k); the first round(0.2 * n_students) form the calibration set, the rest the proper training set",
+    "use": "calibration rows are used only to compute conformal quantiles and probability recalibration maps; never for fitting or early stopping"
+  },
+  "models_fitted_on_proper_training_set": {
+    "ngboost": "Identical to Amendment 1 M3_ngboost (NGBU: NGBoost Normal, depth-4 trees, 400 estimators, lr 0.05, early stopping on its own 10% grouped inner validation split of the proper training set, scale multiplier on the same inner split)",
+    "lightgbm_l2": "Identical to the frozen LightGBM baseline (research.exploratory.candidates.GBM('lightgbm'))",
+    "lightgbm_quantile": "Frozen LightGBM features and hyperparameters with objective='quantile', alpha in {0.025, 0.05, 0.1, 0.25, 0.75, 0.9, 0.95, 0.975}; no tuning"
+  },
+  "interval_methods": {
+    "ngb_raw": "NGBoost Normal mu +/- z sigma (refitted model, no calibration)",
+    "ngb_rescaled": "mu +/- z sigma m, m from NGBoost's inner validation split (as in the IR study)",
+    "split_abs": "split conformal, score |y - mu| (constant width)",
+    "split_norm": "split conformal, score |y - mu| / sigma",
+    "mondrian_category": "split_norm with the quantile computed per course category (>= 100 calibration rows, else pooled)",
+    "mondrian_predicted_range": "split_norm with the quantile computed per predicted grade range of clip(mu, 0, 100) (0-59, 60-69, 70-79, 80-89, 90-100; >= 100 calibration rows, else pooled)",
+    "cqr_lightgbm": "conformalised quantile regression on the LightGBM quantile pair, score max(q_lo - y, y - q_hi)",
+    "split_abs_lightgbm": "split conformal around the refitted LightGBM-L2 point prediction, score |y - yhat|"
+  },
+  "conformal_quantile": "ceil((n + 1)(1 - alpha))-th smallest calibration score (research/aiesc2027/uncertainty.conformal_quantile); intervals clipped to [0, 100]",
+  "levels": [0.5, 0.8, 0.9, 0.95],
+  "interval_outcomes": {
+    "primary": "empirical coverage and mean width at the 90% level, overall and for actual grade 0-59",
+    "secondary": "all levels; coverage by actual grade range, course category, predicted grade range and fold; median width; coverage error"
+  },
+  "probability_recalibration": {
+    "input": "P(Y < 60) = Phi((60 - mu) / sigma) of the refitted NGBoost",
+    "methods": ["raw", "isotonic regression fitted on the calibration set", "logistic (Platt) recalibration of logit p fitted on the calibration set"],
+    "metrics": "Brier score, Brier skill score against the training-fold prevalence, ECE (10 equal-width bins), log loss, PR-AUC, ROC-AUC, mean predicted probability vs prevalence"
+  },
+  "statistics": "student-cluster bootstrap (multinomial weights), 5000 replicates, seed 42, 95% percentile intervals for coverage, width and Brier score; descriptive only (no hypothesis ranking of methods, no multiplicity family)",
+  "guarantee_statement": "Split conformal gives marginal coverage >= 1 - alpha when calibration and test units are exchangeable. Here students are the exchangeable unit and rows within a student are dependent, so the row-level guarantee is approximate. No conditional (per grade range) guarantee exists: actual grade is unknown at prediction time and cannot be conditioned on.",
+  "what_this_is_not": "Not a replacement of the main AIESC results (which use the original full-training-fold models); the refitted models use 80% of each training fold and their point accuracy is reported separately. Not independent validation: the data set is the one used throughout the IR study."
+}

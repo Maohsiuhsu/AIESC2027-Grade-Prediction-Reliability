@@ -1,0 +1,35 @@
+{
+  "title": "AIESC 2027 decision-reliability update v1: fixed review budgets and risk-stratum reliability",
+  "status": "Post hoc exploratory analysis requested after the main and follow-up results were known; this file was written before any of its numbers were computed. No model is trained; only saved out-of-fold scores are re-analysed.",
+  "unit": "enrolment record (student-course), never students",
+  "event": "actual term grade < 60 (population A, n = 83,494; zero grades excluded)",
+  "configurations": {
+    "original_oof": "Saved out-of-fold predictions of the IR study (models fitted on the full training folds): LightGBM, CatBoost, FT-Transformer, NGBoost (point), LightGBM-L1, plus NGBoost P(Y < 60) from the same NGBoost fit.",
+    "refit_80": "Models refitted on 80% of the students of each training fold (follow-ups 1 and 2; same partition): LightGBM-L2, LightGBM-L1, LightGBM classifier, LightGBM q = 0.25, class-weighted LightGBM-L2, NGBoost. Never pooled or ranked together with original_oof."
+  },
+  "scores": {
+    "ranking_scores": "negative predicted grade (regressions, quantile model, NGBoost point): orders records only, not a probability",
+    "probability_scores": "NGBoost P(Y < 60) = Phi((60 - mu) / sigma) (raw); LightGBM classifier output (raw); isotonic / Platt versions fitted on the 20% calibration students (refit_80 only). Ranking uses the raw score; recalibration changes probability levels only."
+  },
+  "budget_analysis": {
+    "budgets": [0.05, 0.10, 0.15, 0.20, 0.25],
+    "curve_grid": "0.005 to 1.000 in steps of 0.005",
+    "rule": "within each test fold, flag exactly the share x of the fold's records with the highest risk score; records tied at the cut-off are included fractionally (expected value under random tie-breaking); counts are pooled over the five folds",
+    "metrics": ["records flagged", "low-grade records captured", "recall", "precision", "lift = precision / prevalence", "records reviewed per low-grade record found = 1 / precision", "low-grade records missed"],
+    "contrasts": {
+      "original_oof": "recall at each budget, each score minus LightGBM (5 scores x 5 budgets = 25), Holm within the family",
+      "refit_80": "recall at each budget, each score minus refitted LightGBM-L2 (5 x 5 = 25), Holm within its own family",
+      "practical_threshold": 0.05,
+      "note": "precision differences at a fixed budget are proportional to recall differences in every replicate and are reported without separate tests"
+    }
+  },
+  "risk_strata": {
+    "strata": ["top 5%", "5-10%", "10-20%", "20-40%", "40-100%"],
+    "rule": "within each test fold, records are ranked by the score using mid-ranks for ties; a tie block is never split, so realised stratum shares are reported",
+    "ranking_reliability": "observed low-grade rate, lift, mean predicted grade, mean actual grade (all scores)",
+    "probability_calibration": "mean predicted probability, calibration gap (mean predicted - observed), Brier score (probability scores only)",
+    "interval_coverage": "90% intervals; original_oof: NGBoost raw, rescaled and the three cross-fold conformal variants, strata by original NGBoost P(Y < 60); refit_80: the eight follow-up-1 methods, strata by refitted NGBoost P(Y < 60) for NGBoost-based intervals and by refitted LightGBM-L2 for LightGBM-based intervals (CQR, split conformal around LightGBM)",
+    "comparisons": "descriptive 95% CIs; top-5% stratum minus all records (coverage) and isotonic / Platt minus raw (calibration gap) as paired bootstrap differences without hypothesis tests"
+  },
+  "bootstrap": {"unit": "student", "replicates": 5000, "seed": 42, "interval": "percentile 95%"}
+}
